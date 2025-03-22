@@ -1,4 +1,4 @@
-package util;
+package org.example.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

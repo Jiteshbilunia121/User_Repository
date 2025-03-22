@@ -1,8 +1,8 @@
-package UserService;
+package org.example.UserService;
 
 
 
-import Entity.User;
+import org.example.Entity.User;
 
 import java.util.Optional;
 

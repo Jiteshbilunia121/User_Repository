@@ -1,10 +1,10 @@
-package UserService;
+package org.example.UserService;
 
 
-import Entity.User;
+import org.example.Entity.User;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import repository.UserRepository;
+import org.example.repository.UserRepository;
 
 import java.util.Optional;
 

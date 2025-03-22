@@ -1,13 +1,13 @@
-package controller;
+package org.example.controller;
 
 
-import Entity.User;
-import UserService.UserService;
-import dto.LoginRequest;
+import org.example.Entity.User;
+import org.example.UserService.UserService;
+import org.example.dto.LoginRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import util.JwtUtil;
+import org.example.util.JwtUtil;
 
 import java.util.Optional;
 
@@ -47,11 +47,11 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
-        Optional<User> userOptional = userService.getUserByEmail(loginRequest.getEmail());
+        Optional<User> userOptional = userService.getUserByEmail(loginRequest.getUserEmail());
 
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            if (passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            if (passwordEncoder.matches(loginRequest.getUserPassword(), user.getPassword())) {
                 String token = jwtUtil.generateToken(user.getEmail());
                 return ResponseEntity.ok(token);
             }
