@@ -38,7 +38,7 @@ public class UserController {
     }
 
     // Get User by Email API
-    @GetMapping("/{email}")
+    @GetMapping("/email/{email}")
     public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
         Optional<User> user = userService.getUserByEmail(email);
         return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
@@ -47,6 +47,7 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+        System.out.println("user email : " + loginRequest.getUserEmail() + " " + "user password: " + loginRequest.getUserPassword());
         Optional<User> userOptional = userService.getUserByEmail(loginRequest.getUserEmail());
 
         if (userOptional.isPresent()) {

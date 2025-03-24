@@ -21,4 +21,13 @@ public class SecurityFilterConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless sessions (JWT-based)
                 .build();
     }
+//    @Bean
+//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+//        return http
+//                .csrf(AbstractHttpConfigurer::disable)
+//            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())  // ❌ Allows all requests (for testing only)
+//                .build();
+//    }
+
+
 }
