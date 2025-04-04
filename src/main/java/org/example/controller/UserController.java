@@ -1,29 +1,51 @@
 package org.example.controller;
 
 
+import com.stripe.Stripe;
+import com.stripe.exception.StripeException;
+import com.stripe.model.PaymentIntent;
+import com.stripe.param.PaymentIntentCreateParams;
+import org.example.UserService.UserPaymentService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
 import org.example.Entity.User;
 import org.example.UserService.UserService;
 import org.example.dto.LoginRequest;
+import org.example.dto.PaymentRequest;
+import org.example.dto.PaymentResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.bind.annotation.*;
 import org.example.util.JwtUtil;
 
 import java.util.Optional;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
+    @Value("${stripe.api.key}")
+    private String stripeApiKey;
+
+    @Autowired
     private final UserService userService;
+
+    @Autowired
+    private final UserPaymentService userPaymentService;
 
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    public UserController(PasswordEncoder passwordEncoder, JwtUtil jwtUtil, UserService userService) {
+    public UserController(PasswordEncoder passwordEncoder, JwtUtil jwtUtil, UserService userService, UserPaymentService userPaymentService) {
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.userService = userService;
+        this.userPaymentService = userPaymentService;
     }
 
 
@@ -58,5 +80,37 @@ public class UserController {
             }
         }
         return ResponseEntity.badRequest().body("Invalid email or password");
+    }
+
+    @PostMapping("/pay")
+    public ResponseEntity<PaymentResponse> makePayment(@RequestBody PaymentRequest paymentRequest) {
+
+
+        try {
+
+            Stripe.apiKey = stripeApiKey;
+            boolean paymentSuccess = paymentRequest.processPayment();
+
+            // Create PaymentIntent in Stripe
+            PaymentIntent paymentIntent = userPaymentService.makePayment(paymentRequest);
+
+            // Check the payment status
+            if ("succeeded".equals(paymentIntent.getStatus())) {
+                PaymentResponse paymentResponse = new PaymentResponse(true, "Payment successful");
+                log.info("Transaction ID: {}", paymentResponse.getTransactionId());
+                return ResponseEntity.ok(paymentResponse);
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(new PaymentResponse(false, "Payment requires action: " + paymentIntent.getStatus()));
+            }
+
+        }
+        catch (StripeException e) {
+            log.error("Stripe Payment error: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new PaymentResponse(false, "Stripe error: " + e.getMessage()));
+        }
+
+
     }
 }
