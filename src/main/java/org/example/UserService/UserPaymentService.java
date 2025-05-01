@@ -27,7 +27,6 @@ public class UserPaymentService {
     }
 
 
-    @Transactional
     public PaymentIntent makePayment(PaymentRequest paymentRequest) throws StripeException {
             // Create PaymentIntent in Stripe
             PaymentIntentCreateParams params = PaymentIntentCreateParams.builder().setAmount((long) (paymentRequest.getAmount() * 100L)) // Convert to cents
@@ -38,15 +37,16 @@ public class UserPaymentService {
                     .setAutomaticPaymentMethods(PaymentIntentCreateParams.AutomaticPaymentMethods.builder().setEnabled(true).build()).build();
 
             PaymentIntent paymentIntent = PaymentIntent.create(params);
-
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-
-                    String eventMessage = "User made the payment";
-                    paymentEventProducer.sendPaymentStatus(paymentIntent);
-                }
-            });
+//
+//            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+//                @Override
+//                public void afterCommit() {
+//
+////                    String eventMessage = "User made the payment";
+//                    paymentEventProducer.sendPaymentStatus(paymentIntent);
+//                }
+//            });
+        paymentEventProducer.sendPaymentStatus(paymentIntent, paymentRequest);
 
         return paymentIntent;
 

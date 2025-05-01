@@ -2,6 +2,7 @@ package org.example.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
@@ -15,7 +16,8 @@ public class SecurityFilterConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for now
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/register", "/api/users/login").permitAll() // Allow registration & login
+                        .requestMatchers(HttpMethod.POST, "/api/users/pay").permitAll()
+                        .requestMatchers("/api/users/register", "/api/users/login", "/api/users/email/**").permitAll() // Allow registration & login
                         .anyRequest().authenticated() // Protect other routes
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless sessions (JWT-based)

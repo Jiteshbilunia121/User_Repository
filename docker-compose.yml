@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  user-service:
+    build:
+      context: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=postgres
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/car_parking
+      - SPRING_DATASOURCE_USERNAME=myuser
+      - SPRING_DATASOURCE_PASSWORD=mypassword
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    networks:
+      - parking_network
+
+networks:
+  parking_network:
+    external: true  # 👈 Tells Docker to use the existing parking_network

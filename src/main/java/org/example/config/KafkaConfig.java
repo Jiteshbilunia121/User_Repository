@@ -6,6 +6,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.example.dto.PaymentInfoDTO;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -21,9 +22,9 @@ public class KafkaConfig {
 
     // ✅ Producer Factory for CheckoutEvent
     @Bean
-    public ProducerFactory<String, PaymentIntent> eventProducerFactory() {
+    public ProducerFactory<String, PaymentInfoDTO> eventProducerFactory() {
         Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka:9092");
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         configProps.put(ConsumerConfig.GROUP_ID_CONFIG, "my-consumer-group");
@@ -34,7 +35,7 @@ public class KafkaConfig {
 
     // ✅ Kafka Template for CheckoutEvent
     @Bean
-    public KafkaTemplate<String, PaymentIntent> eventKafkaTemplate() {
+    public KafkaTemplate<String, PaymentInfoDTO> eventKafkaTemplate() {
         return new KafkaTemplate<>(eventProducerFactory());
     }
 

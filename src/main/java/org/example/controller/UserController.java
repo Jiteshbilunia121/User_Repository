@@ -16,12 +16,15 @@ import org.example.dto.PaymentRequest;
 import org.example.dto.PaymentResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.support.SimpleTriggerContext;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.bind.annotation.*;
 import org.example.util.JwtUtil;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -76,7 +79,11 @@ public class UserController {
             User user = userOptional.get();
             if (passwordEncoder.matches(loginRequest.getUserPassword(), user.getPassword())) {
                 String token = jwtUtil.generateToken(user.getEmail());
-                return ResponseEntity.ok(token);
+
+                Map<String, String> response = new HashMap<>();
+                response.put("token", token);
+                response.put("userId", String.valueOf(user.getId()));
+                return ResponseEntity.ok(response);
             }
         }
         return ResponseEntity.badRequest().body("Invalid email or password");
