@@ -2,9 +2,20 @@ package org.example.controller;
 
 
 import com.stripe.Stripe;
-import com.stripe.exception.StripeException;
+//import com.stripe.exception.StripeException;
+//import com.stripe.model.Event;
 import com.stripe.model.PaymentIntent;
+//import com.stripe.model.billingportal.Session;
+
+import com.stripe.exception.StripeException;
+import com.stripe.model.checkout.Session;
+import com.stripe.param.checkout.SessionCreateParams;
+
+
+import com.stripe.net.Webhook;
 import com.stripe.param.PaymentIntentCreateParams;
+//import com.stripe.param.billingportal.SessionCreateParams;
+import org.example.Event.PaymentEventProducer;
 import org.example.UserService.UserPaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,6 +54,8 @@ public class UserController {
 
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    @Autowired
+    private PaymentEventProducer paymentEventProducer;
 
     public UserController(PasswordEncoder passwordEncoder, JwtUtil jwtUtil, UserService userService, UserPaymentService userPaymentService) {
         this.passwordEncoder = passwordEncoder;
@@ -53,6 +66,7 @@ public class UserController {
 
 
     // User Registration API
+
     @PostMapping("/register")
     public ResponseEntity<String> registerUser(@RequestBody User user) {
         if (userService.getUserByEmail(user.getEmail()).isPresent()) {
@@ -120,4 +134,54 @@ public class UserController {
 
 
     }
+
+//    @PostMapping("/create-payment-intent")
+//    public ResponseEntity<?> createPaymentIntent(@RequestBody PaymentRequest paymentRequest) {
+//        try {
+//            PaymentIntent paymentIntent = userPaymentService.createPaymentIntent(paymentRequest);
+//            return ResponseEntity.ok().body(
+//                    new HashMap<String, String>() {{
+//                        put("clientSecret", paymentIntent.getClientSecret());
+//                    }}
+//            );
+//        } catch (StripeException e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(new PaymentResponse(false, "Payment initialization failed"));
+//        }
+//    }
+
+
+    @PostMapping("/create-checkout-session")
+    public ResponseEntity<?> createCheckoutSession(@RequestBody PaymentRequest paymentRequest) {
+        try {
+            // Build the line item and session parameters
+           Session session = userPaymentService.sessionCreateParams(paymentRequest);
+            // Create the checkout session
+
+            // Return session ID to frontend
+            Map<String, String> responseData = new HashMap<>();
+            responseData.put("sessionId", session.getId());
+
+            return ResponseEntity.ok(responseData);
+        } catch (StripeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new PaymentResponse(false, "Checkout session creation failed"));
+        }
+    }
+
+
+    @GetMapping("/check-session")
+    public ResponseEntity<?> checkSession(@RequestParam String sessionId) {
+        try {
+            Session session = Session.retrieve(sessionId);
+            if ("complete".equals(session.getStatus())) {
+                return ResponseEntity.ok(Map.of("message", "Payment successful"));
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Session not complete"));
+            }
+        } catch (StripeException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Error fetching session"));
+        }
+    }
+
 }

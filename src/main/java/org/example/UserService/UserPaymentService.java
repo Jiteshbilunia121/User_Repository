@@ -3,10 +3,12 @@ package org.example.UserService;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
+import com.stripe.param.checkout.SessionCreateParams;
 import jakarta.transaction.Transactional;
 import org.example.Event.PaymentEventProducer;
 import org.example.dto.PaymentRequest;
 import org.example.dto.PaymentResponse;
+import com.stripe.model.checkout.Session;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,10 +48,54 @@ public class UserPaymentService {
 //                    paymentEventProducer.sendPaymentStatus(paymentIntent);
 //                }
 //            });
-        paymentEventProducer.sendPaymentStatus(paymentIntent, paymentRequest);
+//        paymentEventProducer.sendPaymentStatus(paymentIntent, paymentRequest);
 
         return paymentIntent;
 
     }
+
+//    public PaymentIntent createPaymentIntent(PaymentRequest paymentRequest) throws StripeException {
+//        PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+//                .setAmount((long) (paymentRequest.getAmount() * 100L)) // Amount in cents
+//                .setCurrency("inr") // Changed to INR
+//                .setConfirm(false)
+//                .setAutomaticPaymentMethods(
+//                        PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
+//                                .setEnabled(true)
+//                                .build()
+//                )
+//                .putMetadata("userId", paymentRequest.getUserId().toString())
+//                .putMetadata("vehicleNumber", paymentRequest.getVehicleNumber())
+//                .build();
+//            PaymentIntent paymentIntent = PaymentIntent.create(params);
+//            paymentEventProducer.sendPaymentStatus(paymentIntent, paymentRequest);
+//            return paymentIntent;
+//    }
+    public Session sessionCreateParams(PaymentRequest paymentRequest) throws StripeException {
+        SessionCreateParams params = SessionCreateParams.builder()
+                .setMode(SessionCreateParams.Mode.PAYMENT)
+                .setSuccessUrl("http://localhost:3000/payment-success?session_id={CHECKOUT_SESSION_ID}")
+                .setCancelUrl("http://localhost:3000/payment-cancel")
+                .addLineItem(
+                        SessionCreateParams.LineItem.builder()
+                                .setPriceData(
+                                        SessionCreateParams.LineItem.PriceData.builder()
+                                                .setCurrency("inr")
+                                                .setUnitAmount((long) (paymentRequest.getAmount() * 100)) // amount in paise
+                                                .setProductData(
+                                                        SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                                                                .setName("Your Product Name")  // you can customize this
+                                                                .build())
+                                                .build())
+                                .setQuantity(1L)
+                                .build())
+                .build();
+
+        Session session = Session.create(params);
+        paymentEventProducer.sendPaymentStatus(session, paymentRequest);
+        return session;
+
+    }
+
 }
 
