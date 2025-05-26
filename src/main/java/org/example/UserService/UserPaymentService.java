@@ -74,7 +74,7 @@ public class UserPaymentService {
     public Session sessionCreateParams(PaymentRequest paymentRequest) throws StripeException {
         SessionCreateParams params = SessionCreateParams.builder()
                 .setMode(SessionCreateParams.Mode.PAYMENT)
-                .setSuccessUrl("http://localhost:3000/payment-success?session_id={CHECKOUT_SESSION_ID}")
+                .setSuccessUrl("https://parkingfrontenddeployed.vercel.app/payment-success?session_id={CHECKOUT_SESSION_ID}")
                 .setCancelUrl("http://localhost:3000/payment-cancel")
                 .addLineItem(
                         SessionCreateParams.LineItem.builder()
